@@ -21,8 +21,8 @@ A simple web tool to practice converting binary numbers to decimal. Ideal for st
 
 ## Main files
 
-- [index.html] — complete template with styles and embedded JavaScript.
-- (Optional) [app.py] — example Flask backend if you later want a grading API (not required for local practice).
+- [index.html](https://github.com/luis-c2255/Binary---Decimal-Calculator-Practice/blob/main/templates/quiz.html) — complete template with styles and embedded JavaScript.
+- (Optional) [app.py](https://github.com/luis-c2255/Binary---Decimal-Calculator-Practice/blob/main/app.py) — example Flask backend if you later want a grading API (not required for local practice).
 
 ## Local usage (no server required)
 
