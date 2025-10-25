@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>Calculadora Binario → Decimal (Práctica)</title>
+  <style>
+    :root{
+      --maxw:920px;
+      --gap:10px;
+      --cellw:56px;
+      --bg:#f6f7fb;
+      --accent:#0b76d1;
+      --muted:#234;
+      --card:#fff;
+    }
+    body {
+      font-family: system-ui, Arial, sans-serif;
+      padding: 18px;
+      max-width: var(--maxw);
+      margin: auto;
+      color: var(--muted);
+      background: #f3f6fb;
+    }
+
+    h3 { margin-bottom: 12px; color: #0b3b66; }
+
+    /* CONTENEDOR PRINCIPAL */
+    .board {
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    /* CABECERAS y BITS comparten la misma estructura de columnas */
+    .headers, .bits {
+      display: grid;
+      grid-template-columns: repeat(8, var(--cellw));
+      gap: var(--gap);
+      justify-content: center;
+      margin-bottom: 6px;
+    }
+
+    .header { font-weight:700; text-align:center; display:flex; align-items:center; justify-content:center; height:28px; color:var(--muted); }
+
+    .bit {
+      width: var(--cellw);
+      height: 44px;
+      border-radius:6px;
+      border:1px solid #d5e0f0;
+      background: var(--card);
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      font-weight:700;
+      cursor:pointer;
+      user-select:none;
+      transition: background .12s, color .12s, transform .06s;
+    }
+
+    .bit:active { transform: scale(.98); }
+
+    .bit.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+
+    .controls {
+      display:flex;
+      gap:8px;
+      align-items:center;
+      margin-top:8px;
+      flex-wrap:wrap;
+    }
+
+    .result {
+      font-size:1.4rem;
+      font-weight:700;
+      min-width:72px;
+      text-align:center;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      background:var(--card);
+      border-radius:8px;
+      padding:8px 12px;
+      border:1px solid #e0e8f8;
+    }
+
+    button {
+      padding:8px 12px;
+      border-radius:8px;
+      border:0;
+      background:var(--accent);
+      color:#fff;
+      cursor:pointer;
+    }
+
+    button.secondary {
+      background:#6b7ea8;
+    }
+
+    select { padding:8px; border-radius:8px; border:1px solid #cfdff6; background:#fff; }
+
+    .feedback {
+      font-size:0.95rem;
+      color:#0b3b66;
+      margin-left:8px;
+    }
+
+    .panel {
+      background: #fff;
+      border-radius:10px;
+      padding:12px;
+      border:1px solid #e3eefc;
+      box-shadow: 0 1px 0 rgba(11,55,102,0.03);
+    }
+
+    .small { font-size:0.9rem; color:#3b4a66; }
+
+    @media (max-width: 860px){
+      .board { grid-template-columns: 1fr; }
+      .headers, .bits { grid-template-columns: repeat(8, calc((100% - 7*var(--gap))/8)); }
+    }
+
+    @media (max-width: 520px){
+      :root{ --cellw:40px; }
+    }
+  </style>
+</head>
+<body>
+  <h3>Calculadora binario a decimal — Práctica</h3>
+
+  <div class="board">
+    <div>
+      <div class="panel" style="margin-bottom:12px;">
+        <div class="headers" id="header" aria-hidden="true"></div>
+        <div class="bits" id="bits" role="group" aria-label="Bits binarios"></div>
+
+        <div style="display:flex;align-items:center;margin-top:12px;">
+          <div class="result" id="decimal" aria-live="polite">0</div>
+
+          <div class="controls" style="margin-left:16px;">
+            <button id="clear" class="secondary" type="button" title="Limpiar todos los bits">Limpiar</button>
+            <button id="fillRandom" type="button" title="Generar aleatorio">Aleatorio</button>
+
+            <label for="randomMode" class="small" style="display:flex;align-items:center;gap:8px;margin-left:6px;">
+              <span class="small">Modo</span>
+              <select id="randomMode" aria-label="Modo aleatorio" title="Modo aleatorio">
+                <option value="bits">Bits aleatorios</option>
+                <option value="target" selected>Objetivo aleatorio</option>
+              </select>
+            </label>
+
+            <button id="showSolution" type="button" class="secondary" title="Mostrar la solución del objetivo">Mostrar solución</button>
+            <button id="checkAnswer" type="button" title="Comprobar si tu representación coincide con el objetivo">Comprobar</button>
+
+            <div class="feedback" id="feedback" aria-live="polite"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <aside class="panel" aria-label="Instrucciones y ayuda">
+      <strong>Instrucciones</strong>
+      <p class="small" style="margin-top:8px;">
+        Selecciona <em>Objetivo aleatorio</em> y pulsa <em>Aleatorio</em> para recibir un número objetivo. Representa ese número activando los bits; el valor decimal se actualiza en tiempo real.
+      </p>
+      <ul class="small">
+        <li>Limpiar: restablece los bits a 0.</li>
+        <li>Aleatorio (Bits): genera una combinación de bits aleatoria y muestra su decimal.</li>
+        <li>Aleatorio (Objetivo): genera un objetivo decimal para que lo resuelvas.</li>
+        <li>Mostrar solución: autocompleta los bits que suman el objetivo.</li>
+        <li>Comprobar: valida si la representación coincide con el objetivo.</li>
+      </ul>
+      <hr style="margin:10px 0;border-color:#eef6ff"/>
+      <div class="small">
+        Recomendación: intenta representar cada objetivo sin ver la solución; pulsa "Mostrar solución" solo si te quedas atascado.
+      </div>
+    </aside>
+  </div>
+
+  <script>
+    // Configuración: cambiar si tu plantilla inyecta powers desde el servidor
+    const POWERS = (typeof powers !== 'undefined') ? powers : [128,64,32,16,8,4,2,1];
+    const headerEl = document.getElementById('header');
+    const bitsEl = document.getElementById('bits');
+    const decimalEl = document.getElementById('decimal');
+    const clearBtn = document.getElementById('clear');
+    const randBtn = document.getElementById('fillRandom');
+    const feedback = document.getElementById('feedback');
+    const randomMode = document.getElementById('randomMode');
+    const showSolutionBtn = document.getElementById('showSolution');
+    const checkBtn = document.getElementById('checkAnswer');
+
+    let currentTarget = null;
+
+    // Renderiza encabezados y celdas
+    function renderGrid() {
+      headerEl.innerHTML = '';
+      bitsEl.innerHTML = '';
+      POWERS.forEach((p, i) => {
+        const h = document.createElement('div');
+        h.className = 'header';
+        h.textContent = p;
+        headerEl.appendChild(h);
+
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.className = 'bit';
+        b.setAttribute('data-index', i);
+        b.setAttribute('aria-pressed', 'false');
+        b.setAttribute('aria-label', `Bit ${p}`);
+        b.textContent = '0';
+        b.addEventListener('click', () => toggleBit(b));
+        bitsEl.appendChild(b);
+      });
+    }
+
+    function toggleBit(el) {
+      const active = el.classList.toggle('active');
+      el.setAttribute('aria-pressed', String(active));
+      el.textContent = active ? '1' : '0';
+      updateDecimal();
+    }
+
+    function getBitsArray() {
+      return Array.from(bitsEl.children).map(b => b.classList.contains('active') ? 1 : 0);
+    }
+
+    function updateDecimal() {
+      const bits = getBitsArray();
+      const value = bits.reduce((acc, bit, i) => acc + (bit ? POWERS[i] : 0), 0);
+      // Si hay objetivo, no lo sobreescribimos en la zona de feedback,
+      // pero mostramos el valor actual en el cuadro decimal.
+      decimalEl.textContent = value;
+      if (currentTarget !== null) {
+        feedback.textContent = `Objetivo: ${currentTarget}`;
+      } else {
+        // deja feedback breve si no hay objetivo
+        if (feedback.textContent === 'Limpiado') {
+          /* mantener 'Limpiado' temporalmente */
+        } else {
+          feedback.textContent = '';
+        }
+      }
+    }
+
+    function clearAll() {
+      Array.from(bitsEl.children).forEach(b => {
+        b.classList.remove('active');
+        b.setAttribute('aria-pressed','false');
+        b.textContent = '0';
+      });
+      currentTarget = null;
+      decimalEl.removeAttribute('data-target');
+      updateDecimal();
+      feedback.textContent = 'Limpiado';
+      setTimeout(()=>{ if (feedback.textContent === 'Limpiado') feedback.textContent = ''; }, 900);
+    }
+
+    // Greedy: calcula bits que suman target usando potencias ordenadas
+    function bitsForTarget(target) {
+      let t = Number(target);
+      const bits = POWERS.map(p => {
+        if (p <= t) { t -= p; return 1; }
+        return 0;
+      });
+      return bits;
+    }
+
+    function showSolution() {
+      if (currentTarget === null) {
+        feedback.textContent = 'No hay objetivo actual. Pulsa Aleatorio (Objetivo) primero.';
+        return;
+      }
+      const bits = bitsForTarget(currentTarget);
+      Array.from(bitsEl.children).forEach((b, i) => {
+        if (bits[i]) { b.classList.add('active'); b.setAttribute('aria-pressed','true'); b.textContent='1'; }
+        else { b.classList.remove('active'); b.setAttribute('aria-pressed','false'); b.textContent='0'; }
+      });
+      updateDecimal();
+      feedback.textContent = `Solución mostrada (valor ${currentTarget})`;
+    }
+
+    function checkAnswer() {
+      if (currentTarget === null) {
+        feedback.textContent = 'No hay objetivo para comprobar. Genera uno con Aleatorio (Objetivo).';
+        return;
+      }
+      const currentValue = Number(decimalEl.textContent);
+      if (currentValue === Number(currentTarget)) {
+        feedback.textContent = `Correcto! ${currentValue} = objetivo ${currentTarget}`;
+      } else {
+        feedback.textContent = `Incorrecto. Tu valor: ${currentValue}. Objetivo: ${currentTarget}`;
+      }
+    }
+
+    function doRandom() {
+      const mode = randomMode.value;
+      if (mode === 'bits') {
+        const arr = POWERS.map(() => (Math.random() > 0.5 ? 1 : 0));
+        Array.from(bitsEl.children).forEach((b, i) => {
+          if (arr[i]) { b.classList.add('active'); b.setAttribute('aria-pressed','true'); b.textContent='1'; }
+          else { b.classList.remove('active'); b.setAttribute('aria-pressed','false'); b.textContent='0'; }
+        });
+        currentTarget = null;
+        decimalEl.removeAttribute('data-target');
+        updateDecimal();
+        feedback.textContent = `Generado: ${decimalEl.textContent}`;
+      } else {
+        const max = POWERS.reduce((s,v)=>s+v,0);
+        const target = Math.floor(Math.random() * (max + 1));
+        clearAll();
+        currentTarget = target;
+        decimalEl.setAttribute('data-target', String(target));
+        feedback.textContent = `Objetivo: ${target} — represéntalo con los bits`;
+      }
+    }
+
+    // Eventos
+    clearBtn.addEventListener('click', clearAll);
+    randBtn.addEventListener('click', doRandom);
+    showSolutionBtn.addEventListener('click', showSolution);
+    checkBtn.addEventListener('click', checkAnswer);
+
+    // Inicialización
+    renderGrid();
+    updateDecimal();
+  </script>
+</body>
+</html>
